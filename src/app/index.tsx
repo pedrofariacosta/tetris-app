@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
+import { router } from 'expo-router';
 
 export default function TelaLogin() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ export default function TelaLogin() {
 
   function entrarNoJogo() {
     console.log('Tentando logar com o email:', email);
+    router.replace('/(tabs)/home');
   }
 
   if (!fontsLoaded) {
