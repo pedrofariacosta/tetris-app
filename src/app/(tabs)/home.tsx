@@ -10,6 +10,7 @@ export default function TelaHome() {
 
   function irParaJogo() {
     console.log('Indo para a tela do jogo');
+    router.push('/jogo');
   }
 
   function irParaRanking() {
