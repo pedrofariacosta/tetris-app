@@ -1,98 +1,143 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function TelaLogin() {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+  const [fontsLoaded] = useFonts({
+    PressStart2P_400Regular,
+  });
+
+  function entrarNoJogo() {
+    console.log('Tentando logar com o email:', email);
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+
+  if (!fontsLoaded) {
+    return <View style={styles.container} />;
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <View style={styles.container}>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      <Image
+        source={require('../../assets/game-console.png')}
+        style={styles.logo}
+      />
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <Text style={styles.titulo}>Tetris Arcade</Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      <View style={styles.inputContainer}>
+        <Image
+          source={require('../../assets/mail.png')}
+          style={styles.inputIcon}
+        />
+        <TextInput
+          style={styles.inputField}
+          placeholder="Email"
+          placeholderTextColor="#FFFFFF"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <View style={styles.inputContainer}>
+        <Image
+          source={require('../../assets/padlock.png')}
+          style={styles.inputIcon}
+        />
+        <TextInput
+          style={styles.inputField}
+          placeholder="Senha"
+          placeholderTextColor="#FFFFFF"
+          value={senha}
+          onChangeText={setSenha}
+          secureTextEntry={true}
+        />
+      </View>
+
+      <TouchableOpacity style={styles.botao} onPress={entrarNoJogo}>
+        <Text style={styles.textoBotao}>Entrar</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={{ marginTop: 20 }}>
+        <Text style={styles.textoCadastroContainer}>
+          <Text style={styles.textoCadastroComum}>Não tem uma conta? </Text>
+          <Text style={styles.textoCadastroDestaque}>Cadastre-se</Text>
+        </Text>
+      </TouchableOpacity>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1A1A24',
+    alignItems: 'center',
     justifyContent: 'center',
+    padding: 20,
+  },
+  logo: {
+    width: 170,
+    height: 170,
+    marginBottom: 10,
+  },
+  titulo: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 22,
+    marginBottom: 40,
+    color: '#FFFFFF',
+  },
+  inputContainer: {
     flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    width: '100%',
+    height: 50,
+    backgroundColor: '#202024',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#000000',
   },
-  heroSection: {
+  inputIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    resizeMode: 'contain',
+  },
+  inputField: {
+    flex: 1,
+    height: '100%',
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  botao: {
+    width: '30%',
+    height: 50,
+    backgroundColor: '#8B56FC',
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    marginTop: 10,
   },
-  title: {
-    textAlign: 'center',
+  textoBotao: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  code: {
-    textTransform: 'uppercase',
+  textoCadastroContainer: {
+    fontSize: 14,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  textoCadastroComum: {
+    color: '#FFFFFF',
   },
+  textoCadastroDestaque: {
+    color: '#8B56FC',
+  }
 });
