@@ -8,7 +8,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: [styles.tabBar, { width: width - 50 }],
+        tabBarStyle: styles.tabBar,
         tabBarShowLabel: false,
         tabBarSafeAreaInsets: { bottom: 0, top: 0, left: 0, right: 0 },
         tabBarItemStyle: {
