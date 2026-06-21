@@ -1,15 +1,114 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { router } from 'expo-router';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
 
+const PECAS = [
+  {
+    formato: [[1, 1, 1, 1]], // I
+    cor: '#00E5FF', // Ciano neon
+  },
+  {
+    formato: [
+      [1, 1],
+      [1, 1]
+    ], // O
+    cor: '#FFFF00', // Amarelo neon
+  },
+  {
+    formato: [
+      [0, 1, 0],
+      [1, 1, 1]
+    ], // T
+    cor: '#6E44FF', // Roxo neon
+  },
+  {
+    formato: [
+      [0, 1, 1],
+      [1, 1, 0]
+    ], // S
+    cor: '#39FF14', // Verde neon
+  },
+  {
+    formato: [
+      [1, 1, 0],
+      [0, 1, 1]
+    ], // Z
+    cor: '#FF007F', // Rosa neon
+  },
+  {
+    formato: [
+      [1, 0, 0],
+      [1, 1, 1]
+    ], // J
+    cor: '#0033FF', // Azul neon
+  },
+  {
+    formato: [
+      [0, 0, 1],
+      [1, 1, 1]
+    ], // L
+    cor: '#FF6C00', // Laranja neon
+  }
+];
+
+function obterNovaPeca() {
+  const indiceAleatorio = Math.floor(Math.random() * PECAS.length);
+  const pecaBase = PECAS[indiceAleatorio];
+  return {
+    formato: pecaBase.formato,
+    cor: pecaBase.cor,
+    linha: 0,
+    coluna: Math.floor((10 - pecaBase.formato[0].length) / 2),
+  };
+}
+
+function verificarColisao(novasCoordenadas: { formato: number[][]; linha: number; coluna: number; }, grade: any[][]) {
+  const { formato, linha, coluna } = novasCoordenadas;
+  for (let r = 0; r < formato.length; r++) {
+    for (let c = 0; c < formato[r].length; c++) {
+      if (formato[r][c]) {
+        const proximaLinha = linha + r;
+        const proximaColuna = coluna + c;
+
+        if (proximaColuna < 0 || proximaColuna >= 10 || proximaLinha >= 20) {
+          return true;
+        }
+
+        if (proximaLinha >= 0 && grade[proximaLinha][proximaColuna] !== 0) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 export default function TelaJogo() {
   const [pontuacao, setPontuacao] = useState(0);
   const [modalVisivel, setModalVisivel] = useState(false);
+  const [tabuleiro, setTabuleiro] = useState(() =>
+    Array.from({ length: 20 }, () => Array(10).fill(0))
+  );
+  const [pecaAtual, setPecaAtual] = useState(() => obterNovaPeca());
+
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
+
+  const velocidadeQueda = 1000;
+
+  const pecaAtualRef = useRef(pecaAtual);
+  const tabuleiroRef = useRef(tabuleiro);
+
+  useEffect(() => {
+    pecaAtualRef.current = pecaAtual;
+  }, [pecaAtual]);
+
+  useEffect(() => {
+    tabuleiroRef.current = tabuleiro;
+  }, [tabuleiro]);
 
   function pausarJogo() {
     setModalVisivel(true);
@@ -24,6 +123,67 @@ export default function TelaJogo() {
     router.replace('/(tabs)/home');
   }
 
+  function reiniciarJogo() {
+    setTabuleiro(Array.from({ length: 20 }, () => Array(10).fill(0)));
+    setPecaAtual(obterNovaPeca());
+    setPontuacao(0);
+  }
+
+  function fixarPeca() {
+    const gradeAtual = tabuleiroRef.current;
+    const peca = pecaAtualRef.current;
+    const novaGrade = gradeAtual.map(linha => [...linha]);
+    const { formato, linha, coluna, cor } = peca;
+
+    for (let r = 0; r < formato.length; r++) {
+      for (let c = 0; c < formato[r].length; c++) {
+        if (formato[r][c]) {
+          const boardR = linha + r;
+          const boardC = coluna + c;
+          if (boardR >= 0 && boardR < 20 && boardC >= 0 && boardC < 10) {
+            novaGrade[boardR][boardC] = cor;
+          }
+        }
+      }
+    }
+
+    setTabuleiro(novaGrade);
+
+    const novaPeca = obterNovaPeca();
+    if (verificarColisao(novaPeca, novaGrade)) {
+      reiniciarJogo();
+    } else {
+      setPecaAtual(novaPeca);
+    }
+  }
+
+  function moverBaixo() {
+    const peca = pecaAtualRef.current;
+    const grade = tabuleiroRef.current;
+    if (!peca) return;
+
+    const proximaPeca = {
+      ...peca,
+      linha: peca.linha + 1,
+    };
+
+    if (verificarColisao(proximaPeca, grade)) {
+      fixarPeca();
+    } else {
+      setPecaAtual(proximaPeca);
+    }
+  }
+
+  useEffect(() => {
+    if (modalVisivel) return;
+
+    const loop = setInterval(() => {
+      moverBaixo();
+    }, velocidadeQueda);
+
+    return () => clearInterval(loop);
+  }, [modalVisivel]);
+
   if (!fontsLoaded) {
     return (
       <LinearGradient
@@ -31,6 +191,22 @@ export default function TelaJogo() {
         style={styles.container}
       />
     );
+  }
+
+  const tabuleiroVisual = tabuleiro.map(linha => [...linha]);
+  if (pecaAtual) {
+    const { formato, linha, coluna, cor } = pecaAtual;
+    for (let r = 0; r < formato.length; r++) {
+      for (let c = 0; c < formato[r].length; c++) {
+        if (formato[r][c]) {
+          const boardR = linha + r;
+          const boardC = coluna + c;
+          if (boardR >= 0 && boardR < 20 && boardC >= 0 && boardC < 10) {
+            tabuleiroVisual[boardR][boardC] = cor;
+          }
+        }
+      }
+    }
   }
 
   return (
@@ -54,10 +230,20 @@ export default function TelaJogo() {
 
       <View style={styles.tabuleiro}>
         <View style={styles.gridFundo}>
-          {Array.from({ length: 20 }).map((_, r) => (
+          {tabuleiroVisual.map((linha, r) => (
             <View key={r} style={styles.linhaGrid}>
-              {Array.from({ length: 10 }).map((_, c) => (
-                <View key={c} style={styles.celulaGrid} />
+              {linha.map((valorCelula, c) => (
+                <View
+                  key={c}
+                  style={[
+                    styles.celulaGrid,
+                    valorCelula !== 0 && {
+                      backgroundColor: valorCelula,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
+                    }
+                  ]}
+                />
               ))}
             </View>
           ))}
