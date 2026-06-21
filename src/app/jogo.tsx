@@ -1,17 +1,27 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { router } from 'expo-router';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function TelaJogo() {
   const [pontuacao, setPontuacao] = useState(0);
+  const [modalVisivel, setModalVisivel] = useState(false);
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
 
   function pausarJogo() {
-    console.log('Jogo pausado!');
+    setModalVisivel(true);
+  }
+
+  function fecharModal() {
+    setModalVisivel(false);
+  }
+
+  function voltarParaHome() {
+    setModalVisivel(false);
+    router.replace('/(tabs)/home');
   }
 
   if (!fontsLoaded) {
@@ -78,6 +88,27 @@ export default function TelaJogo() {
           Deslize para mover - Toque para girar
         </Text>
       </View>
+
+      <Modal
+        transparent={true}
+        visible={modalVisivel}
+        animationType="fade"
+        onRequestClose={fecharModal}
+      >
+        <View style={styles.containerModal}>
+          <View style={styles.cardModal}>
+            <Text style={styles.tituloModal}>JOGO PAUSADO</Text>
+
+            <TouchableOpacity style={styles.botaoModalContinuar} onPress={fecharModal}>
+              <Text style={styles.textoBotaoContinuar}>CONTINUAR</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botaoModalSair} onPress={voltarParaHome}>
+              <Text style={styles.textoBotaoSair}>SAIR DO JOGO</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </LinearGradient>
   );
@@ -232,5 +263,74 @@ const styles = StyleSheet.create({
     fontFamily: 'PressStart2P_400Regular',
     fontSize: 9,
     textAlign: 'center',
+  },
+  containerModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardModal: {
+    width: '85%',
+    backgroundColor: '#1E0B36',
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#00E5FF',
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  tituloModal: {
+    color: '#FFFF00',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 14,
+    marginBottom: 28,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  botaoModalContinuar: {
+    width: '100%',
+    backgroundColor: '#00E5FF',
+    paddingVertical: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoContinuar: {
+    color: '#090D16',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  botaoModalSair: {
+    width: '100%',
+    backgroundColor: '#FF007F',
+    paddingVertical: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    shadowColor: '#FF007F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoSair: {
+    color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 12,
+    fontWeight: 'bold',
   }
 });

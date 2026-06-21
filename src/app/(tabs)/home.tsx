@@ -15,6 +15,7 @@ export default function TelaHome() {
 
   function irParaRanking() {
     console.log('Indo para o ranking');
+    router.push('/(tabs)/ranking');
   }
 
   function abrirConfiguracoes() {
@@ -23,12 +24,13 @@ export default function TelaHome() {
 
   function abrirSobre() {
     console.log('Abrir sobre');
+    router.push('/(tabs)/sobre');
   }
 
   if (!fontsLoaded) {
     return (
       <LinearGradient
-        colors={['#0F172A', '#2E1065']}
+        colors={['#0B0F19', '#1E0B36']}
         style={styles.container}
       />
     );
@@ -36,7 +38,7 @@ export default function TelaHome() {
 
   return (
     <LinearGradient
-      colors={['#0F172A', '#2E1065']}
+      colors={['#0B0F19', '#1E0B36']}
       style={styles.container}
     >
 
@@ -59,8 +61,8 @@ export default function TelaHome() {
       </View>
 
       <View style={styles.cardBoasVindas}>
-        <Text style={styles.textoBoasVindas}>Olá, [Nome]!</Text>
-        <Text style={styles.textoBoasVindas}>Pronto para bater seu recorde?</Text>
+        <Text style={styles.textoBoasVindas}>OLÁ, [NOME]!</Text>
+        <Text style={styles.textoBoasVindasSub}>PRONTO PARA BATER SEU RECORDE?</Text>
       </View>
 
       <View style={styles.areaBotoes}>
@@ -88,7 +90,6 @@ export default function TelaHome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C113A',
     alignItems: 'center',
     paddingBottom: 110,
   },
@@ -98,22 +99,22 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     resizeMode: 'contain',
-    opacity: 0.5,
+    opacity: 0.25,
     zIndex: -1,
   },
   pecaVerde: {
-    left: 30,
-    top: 250,
+    left: 20,
+    top: 200,
     transform: [{ rotate: '45deg' }],
   },
   pecaRosa: {
     right: 20,
-    bottom: 230,
+    bottom: 280,
     transform: [{ rotate: '-20deg' }],
   },
   pecaLaranja: {
     left: 40,
-    bottom: 100,
+    bottom: 170,
     transform: [{ rotate: '70deg' }],
   },
 
@@ -128,30 +129,52 @@ const styles = StyleSheet.create({
   },
   tituloHeader: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: 'PressStart2P_400Regular',
+    textShadowColor: '#00E5FF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
   },
   perfilPlaceholder: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#555555',
+    backgroundColor: '#0D091A',
+    borderWidth: 2,
+    borderColor: '#00E5FF',
     position: 'absolute',
     right: 20,
     top: 50,
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
   },
 
   cardBoasVindas: {
     width: '85%',
-    backgroundColor: '#2A204C',
+    backgroundColor: 'rgba(9, 6, 20, 0.85)',
     padding: 20,
-    borderRadius: 12,
-    marginBottom: 60,
+    borderRadius: 15,
+    marginBottom: 50,
+    borderWidth: 2,
+    borderColor: '#6E44FF',
+    shadowColor: '#6E44FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
   },
   textoBoasVindas: {
     color: '#FFFFFF',
-    fontSize: 16,
-    marginBottom: 10,
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 10,
+    marginBottom: 8,
+  },
+  textoBoasVindasSub: {
+    color: '#00E5FF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
   },
 
   areaBotoes: {
@@ -164,25 +187,37 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
-    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    marginBottom: 10,
+    shadowColor: '#FFA500',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
   },
   textoBotaoJogar: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    color: '#090D16',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 14,
     fontWeight: 'bold',
   },
   botaoSecundario: {
-    width: '60%',
+    width: '65%',
     paddingVertical: 12,
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
+    backgroundColor: 'rgba(9, 6, 20, 0.65)',
+    borderWidth: 2,
     borderColor: '#6E44FF',
     borderRadius: 25,
     alignItems: 'center',
+    shadowColor: '#6E44FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   textoBotaoSecundario: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 10,
   }
 });

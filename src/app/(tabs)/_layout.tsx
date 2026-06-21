@@ -1,12 +1,14 @@
 import { Tabs } from 'expo-router';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 export default function TabLayout() {
+  const { width } = useWindowDimensions();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { width: width - 50 }],
         tabBarShowLabel: false,
         tabBarSafeAreaInsets: { bottom: 0, top: 0, left: 0, right: 0 },
         tabBarItemStyle: {
