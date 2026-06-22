@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, PanResponder } from 'react-native';
 import { router } from 'expo-router';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -92,6 +92,7 @@ export default function TelaJogo() {
     Array.from({ length: 20 }, () => Array(10).fill(0))
   );
   const [pecaAtual, setPecaAtual] = useState(() => obterNovaPeca());
+  const [proximaPeca, setProximaPeca] = useState(() => obterNovaPeca());
 
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
@@ -100,11 +101,16 @@ export default function TelaJogo() {
   const velocidadeQueda = 1000;
 
   const pecaAtualRef = useRef(pecaAtual);
+  const proximaPecaRef = useRef(proximaPeca);
   const tabuleiroRef = useRef(tabuleiro);
 
   useEffect(() => {
     pecaAtualRef.current = pecaAtual;
   }, [pecaAtual]);
+
+  useEffect(() => {
+    proximaPecaRef.current = proximaPeca;
+  }, [proximaPeca]);
 
   useEffect(() => {
     tabuleiroRef.current = tabuleiro;
@@ -125,7 +131,10 @@ export default function TelaJogo() {
 
   function reiniciarJogo() {
     setTabuleiro(Array.from({ length: 20 }, () => Array(10).fill(0)));
-    setPecaAtual(obterNovaPeca());
+    const pAtual = obterNovaPeca();
+    const pProx = obterNovaPeca();
+    setPecaAtual(pAtual);
+    setProximaPeca(pProx);
     setPontuacao(0);
   }
 
@@ -147,32 +156,178 @@ export default function TelaJogo() {
       }
     }
 
-    setTabuleiro(novaGrade);
+    let linhasLimpas = 0;
+    const gradeFiltrada = novaGrade.filter(linha => {
+      const linhaCompleta = linha.every(celula => celula !== 0);
+      if (linhaCompleta) {
+        linhasLimpas++;
+      }
+      return !linhaCompleta;
+    });
 
-    const novaPeca = obterNovaPeca();
-    if (verificarColisao(novaPeca, novaGrade)) {
+    while (gradeFiltrada.length < 20) {
+      gradeFiltrada.unshift(Array(10).fill(0));
+    }
+
+    if (linhasLimpas > 0) {
+      const pontosPorLinha = [0, 100, 300, 500, 800];
+      const ganhoPontos = pontosPorLinha[linhasLimpas] || 800;
+      setPontuacao(prev => prev + ganhoPontos);
+    }
+
+    setTabuleiro(gradeFiltrada);
+
+    const pecaQueVaiEntrar = proximaPecaRef.current;
+    const novaProximaPeca = obterNovaPeca();
+    setProximaPeca(novaProximaPeca);
+
+    if (verificarColisao(pecaQueVaiEntrar, gradeFiltrada)) {
       reiniciarJogo();
     } else {
-      setPecaAtual(novaPeca);
+      setPecaAtual(pecaQueVaiEntrar);
     }
   }
 
   function moverBaixo() {
     const peca = pecaAtualRef.current;
     const grade = tabuleiroRef.current;
-    if (!peca) return;
+    if (!peca || modalVisivel) return;
 
-    const proximaPeca = {
+    const proximaPecaPos = {
       ...peca,
       linha: peca.linha + 1,
     };
 
-    if (verificarColisao(proximaPeca, grade)) {
+    if (verificarColisao(proximaPecaPos, grade)) {
       fixarPeca();
     } else {
-      setPecaAtual(proximaPeca);
+      setPecaAtual(proximaPecaPos);
     }
   }
+
+  function moverEsquerda() {
+    const peca = pecaAtualRef.current;
+    const grade = tabuleiroRef.current;
+    if (!peca || modalVisivel) return;
+
+    const proximaPecaPos = {
+      ...peca,
+      coluna: peca.coluna - 1,
+    };
+
+    if (!verificarColisao(proximaPecaPos, grade)) {
+      setPecaAtual(proximaPecaPos);
+    }
+  }
+
+  function moverDireita() {
+    const peca = pecaAtualRef.current;
+    const grade = tabuleiroRef.current;
+    if (!peca || modalVisivel) return;
+
+    const proximaPecaPos = {
+      ...peca,
+      coluna: peca.coluna + 1,
+    };
+
+    if (!verificarColisao(proximaPecaPos, grade)) {
+      setPecaAtual(proximaPecaPos);
+    }
+  }
+
+  function girarPeca() {
+    const peca = pecaAtualRef.current;
+    const grade = tabuleiroRef.current;
+    if (!peca || modalVisivel) return;
+
+    const { formato } = peca;
+    const N = formato.length;
+    const M = formato[0].length;
+
+    let novoFormato = Array.from({ length: M }, () => Array(N).fill(0));
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < M; c++) {
+        novoFormato[c][N - 1 - r] = formato[r][c];
+      }
+    }
+
+    const proximaPecaPos = {
+      ...peca,
+      formato: novoFormato,
+    };
+
+    const colunasParaTestar = [0, -1, 1, -2, 2];
+    for (let deslocamento of colunasParaTestar) {
+      const pecaTestada = {
+        ...proximaPecaPos,
+        coluna: peca.coluna + deslocamento,
+      };
+      if (!verificarColisao(pecaTestada, grade)) {
+        setPecaAtual(pecaTestada);
+        break;
+      }
+    }
+  }
+
+  function quedaRapida() {
+    const grade = tabuleiroRef.current;
+    const peca = pecaAtualRef.current;
+    if (!peca || modalVisivel) return;
+
+    let proximaPecaPos = { ...peca };
+    let linhasDropadas = 0;
+    while (!verificarColisao({ ...proximaPecaPos, linha: proximaPecaPos.linha + 1 }, grade)) {
+      proximaPecaPos.linha += 1;
+      linhasDropadas++;
+    }
+
+    if (linhasDropadas > 0) {
+      pecaAtualRef.current = proximaPecaPos;
+      setPecaAtual(proximaPecaPos);
+      fixarPeca();
+    }
+  }
+
+  const lastStepX = useRef(0);
+  const lastStepY = useRef(0);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        lastStepX.current = 0;
+        lastStepY.current = 0;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const stepsX = Math.round(gestureState.dx / 30);
+        const stepsY = Math.round(gestureState.dy / 30);
+
+        if (stepsX !== lastStepX.current) {
+          const diffX = stepsX - lastStepX.current;
+          lastStepX.current = stepsX;
+          if (diffX > 0) {
+            for (let i = 0; i < diffX; i++) moverDireita();
+          } else {
+            for (let i = 0; i < -diffX; i++) moverEsquerda();
+          }
+        }
+
+        if (stepsY > lastStepY.current) {
+          const diffY = stepsY - lastStepY.current;
+          lastStepY.current = stepsY;
+          if (diffY > 0) {
+            for (let i = 0; i < diffY; i++) moverBaixo();
+          }
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (Math.abs(gestureState.dx) < 10 && Math.abs(gestureState.dy) < 10) {
+          girarPeca();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     if (modalVisivel) return;
@@ -214,7 +369,6 @@ export default function TelaJogo() {
       colors={['#0B0F19', '#1E0B36']}
       style={styles.container}
     >
-
       <View style={styles.header}>
         <View style={styles.placar}>
           <Text style={styles.tituloPlacar}>PONTOS</Text>
@@ -228,7 +382,7 @@ export default function TelaJogo() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.tabuleiro}>
+      <View style={styles.tabuleiro} {...panResponder.panHandlers}>
         <View style={styles.gridFundo}>
           {tabuleiroVisual.map((linha, r) => (
             <View key={r} style={styles.linhaGrid}>
@@ -250,29 +404,47 @@ export default function TelaJogo() {
         </View>
 
         <View style={styles.caixaProxima}>
-          <Text style={styles.textoProxima}>Proxima</Text>
+          <Text style={styles.textoProxima}>Próxima</Text>
           <View style={styles.previewPeca}>
-            <View style={styles.linhaPreview}>
-              <View style={styles.quadradinhoRosa} />
-              <View style={styles.quadradinhoVazio} />
-            </View>
-            <View style={styles.linhaPreview}>
-              <View style={styles.quadradinhoRosa} />
-              <View style={styles.quadradinhoVazio} />
-            </View>
-            <View style={styles.linhaPreview}>
-              <View style={styles.quadradinhoRosa} />
-              <View style={styles.quadradinhoRosa} />
-            </View>
+            {proximaPeca.formato.map((linha, r) => (
+              <View key={r} style={styles.linhaPreview}>
+                {linha.map((celula, c) => (
+                  <View
+                    key={c}
+                    style={
+                      celula
+                        ? [styles.quadradinhoRosa, { backgroundColor: proximaPeca.cor }]
+                        : styles.quadradinhoVazio
+                    }
+                  />
+                ))}
+              </View>
+            ))}
           </View>
         </View>
-
       </View>
 
       <View style={styles.areaControles}>
-        <Text style={styles.textoControles}>
-          Deslize para mover - Toque para girar
+        <Text style={styles.textoControlesAjuda}>
+          Arraste no tabuleiro para mover / Toque para girar
         </Text>
+        <View style={styles.botoesContainer}>
+          <TouchableOpacity style={[styles.botaoControle, { borderColor: '#00E5FF' }]} onPress={moverEsquerda}>
+            <Text style={[styles.textoBotaoControle, { color: '#00E5FF' }]}>◀</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.botaoControle, { borderColor: '#6E44FF', minWidth: 80 }]} onPress={girarPeca}>
+            <Text style={[styles.textoBotaoControle, { color: '#6E44FF', fontSize: 10 }]}>GIRAR</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.botaoControle, { borderColor: '#00E5FF' }]} onPress={moverDireita}>
+            <Text style={[styles.textoBotaoControle, { color: '#00E5FF' }]}>▶</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.botaoControle, { borderColor: '#FF007F' }]} onPress={quedaRapida}>
+            <Text style={[styles.textoBotaoControle, { color: '#FF007F', fontSize: 10 }]}>DROP</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal
@@ -295,7 +467,6 @@ export default function TelaJogo() {
           </View>
         </View>
       </Modal>
-
     </LinearGradient>
   );
 }
@@ -409,29 +580,32 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   previewPeca: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 50,
+    minHeight: 50,
   },
   linhaPreview: {
     flexDirection: 'row',
   },
   quadradinhoRosa: {
-    width: 16,
-    height: 16,
+    width: 12,
+    height: 12,
     backgroundColor: '#FF007F',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 2,
   },
   quadradinhoVazio: {
-    width: 16,
-    height: 16,
+    width: 12,
+    height: 12,
     backgroundColor: 'transparent',
   },
 
   areaControles: {
     height: 100,
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 15,
+    marginBottom: 5,
     borderWidth: 2,
     borderColor: '#6E44FF',
     borderRadius: 15,
@@ -443,13 +617,42 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 4,
+    paddingVertical: 8,
   },
-  textoControles: {
+  textoControlesAjuda: {
     color: '#FFFFFF',
     fontFamily: 'PressStart2P_400Regular',
-    fontSize: 9,
+    fontSize: 7,
     textAlign: 'center',
+    marginBottom: 10,
+    lineHeight: 10,
   },
+  botoesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  botaoControle: {
+    height: 40,
+    minWidth: 55,
+    borderWidth: 2,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(9, 13, 22, 0.85)',
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  textoBotaoControle: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
   containerModal: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
