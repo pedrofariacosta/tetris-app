@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, PanResponder } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, PanResponder, TextInput, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { db } from '../firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -88,6 +90,8 @@ function verificarColisao(novasCoordenadas: { formato: number[][]; linha: number
 export default function TelaJogo() {
   const [pontuacao, setPontuacao] = useState(0);
   const [modalVisivel, setModalVisivel] = useState(false);
+  const [modalGameOverVisivel, setModalGameOverVisivel] = useState(false);
+  const [nomeJogador, setNomeJogador] = useState('');
   const [tabuleiro, setTabuleiro] = useState(() =>
     Array.from({ length: 20 }, () => Array(10).fill(0))
   );
@@ -136,6 +140,41 @@ export default function TelaJogo() {
     setPecaAtual(pAtual);
     setProximaPeca(pProx);
     setPontuacao(0);
+    setNomeJogador('');
+  }
+
+  function salvarPontuacao() {
+    console.log('salvarPontuacao: Iniciando salvamento...');
+    const nome = nomeJogador.trim() === '' ? 'Anônimo' : nomeJogador.trim();
+    console.log('salvarPontuacao: Salvando dados:', { nome, pontos: pontuacao });
+    
+    try {
+      console.log('salvarPontuacao: Chamando addDoc...');
+      addDoc(collection(db, 'ranking'), {
+        nome: nome,
+        pontuacao: pontuacao
+      })
+      .then((docRef) => {
+        console.log('salvarPontuacao: Salvo com sucesso no Firestore. ID:', docRef.id);
+      })
+      .catch((err) => {
+        console.error('salvarPontuacao: Erro assíncrono ao salvar no Firestore:', err);
+      });
+      
+      console.log('salvarPontuacao: Limpando estados e redirecionando...');
+      setModalGameOverVisivel(false);
+      reiniciarJogo();
+      router.replace('/(tabs)/ranking');
+    } catch (e) {
+      console.error("salvarPontuacao: Erro síncrono capturado:", e);
+      Alert.alert(
+        "Erro ao Salvar",
+        "Ocorreu um problema ao registrar a pontuação.",
+        [
+          { text: "Ok" }
+        ]
+      );
+    }
   }
 
   function fixarPeca() {
@@ -182,7 +221,7 @@ export default function TelaJogo() {
     setProximaPeca(novaProximaPeca);
 
     if (verificarColisao(pecaQueVaiEntrar, gradeFiltrada)) {
-      reiniciarJogo();
+      setModalGameOverVisivel(true);
     } else {
       setPecaAtual(pecaQueVaiEntrar);
     }
@@ -330,14 +369,14 @@ export default function TelaJogo() {
   ).current;
 
   useEffect(() => {
-    if (modalVisivel) return;
+    if (modalVisivel || modalGameOverVisivel) return;
 
     const loop = setInterval(() => {
       moverBaixo();
     }, velocidadeQueda);
 
     return () => clearInterval(loop);
-  }, [modalVisivel]);
+  }, [modalVisivel, modalGameOverVisivel]);
 
   if (!fontsLoaded) {
     return (
@@ -463,6 +502,35 @@ export default function TelaJogo() {
 
             <TouchableOpacity style={styles.botaoModalSair} onPress={voltarParaHome}>
               <Text style={styles.textoBotaoSair}>SAIR DO JOGO</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        transparent={true}
+        visible={modalGameOverVisivel}
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.containerModal}>
+          <View style={styles.cardModal}>
+            <Text style={styles.tituloModal}>FIM DE JOGO</Text>
+            
+            <Text style={styles.pontuacaoFinalText}>PONTOS: {pontuacao}</Text>
+
+            <TextInput
+              style={styles.inputNome}
+              placeholder="DIGITE SEU NOME"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
+              value={nomeJogador}
+              onChangeText={setNomeJogador}
+              accessibilityLabel="Nome do jogador para o ranking"
+              autoCapitalize="characters"
+            />
+
+            <TouchableOpacity style={styles.botaoSalvarRanking} onPress={salvarPontuacao}>
+              <Text style={styles.textoBotaoSalvar}>SALVAR E VER RANKING</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -720,6 +788,46 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'PressStart2P_400Regular',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  pontuacaoFinalText: {
+    color: '#FFFF00',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputNome: {
+    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderWidth: 2,
+    borderColor: '#6E44FF',
+    borderRadius: 8,
+    padding: 12,
+    color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 10,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  botaoSalvarRanking: {
+    width: '100%',
+    backgroundColor: '#39FF14',
+    paddingVertical: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    shadowColor: '#39FF14',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoSalvar: {
+    color: '#090D16',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 10,
     fontWeight: 'bold',
   }
 });

@@ -1,15 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, FlatList } from 'react-native';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
-
-// dados temporários
-const DADOS_MOCK = [
-  { id: '1', rank: 1, nome: 'João', pontos: 155 },
-  { id: '2', rank: 2, nome: 'Lucas', pontos: 130 },
-  { id: '3', rank: 3, nome: 'Ana', pontos: 112 },
-  { id: '4', rank: 4, nome: 'Julia', pontos: 102 },
-];
+import { db } from '../../firebaseConfig';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 const getRankColor = (rank: number) => {
   switch (rank) {
@@ -22,12 +16,30 @@ const getRankColor = (rank: number) => {
 
 export default function TelaRanking() {
   const [busca, setBusca] = useState('');
+  const [jogadores, setJogadores] = useState<{ id: string; rank: number; nome: string; pontos: number }[]>([]);
 
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
 
-  const jogadoresFiltrados = DADOS_MOCK.filter(jogador =>
+  useEffect(() => {
+    const q = query(collection(db, 'ranking'), orderBy('pontuacao', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const listaJogadores = snapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        rank: index + 1,
+        nome: doc.data().nome || 'Anônimo',
+        pontos: doc.data().pontuacao || 0,
+      }));
+      setJogadores(listaJogadores);
+    }, (error) => {
+      console.error("Erro ao carregar ranking do Firestore: ", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const jogadoresFiltrados = jogadores.filter(jogador =>
     jogador.nome.toLowerCase().includes(busca.toLowerCase())
   );
 
