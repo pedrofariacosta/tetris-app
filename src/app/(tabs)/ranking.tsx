@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, FlatList, TouchableOpacity, Modal, Keyboard, Alert } from 'react-native';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
 import { db } from '../../firebaseConfig';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const getRankColor = (rank: number) => {
   switch (rank) {
@@ -17,6 +17,44 @@ const getRankColor = (rank: number) => {
 export default function TelaRanking() {
   const [busca, setBusca] = useState('');
   const [jogadores, setJogadores] = useState<{ id: string; rank: number; nome: string; pontos: number }[]>([]);
+  const [modalAcaoVisivel, setModalAcaoVisivel] = useState(false);
+  const [jogadorSelecionado, setJogadorSelecionado] = useState<{ id: string; rank: number; nome: string; pontos: number } | null>(null);
+  const [novoNomeEditado, setNovoNomeEditado] = useState('');
+
+  const atualizarRegistro = async () => {
+    if (!jogadorSelecionado || !novoNomeEditado.trim()) return;
+    Keyboard.dismiss();
+    const selected = jogadorSelecionado;
+    const newName = novoNomeEditado.trim();
+
+    setModalAcaoVisivel(false);
+    setJogadorSelecionado(null);
+
+    try {
+      const docRef = doc(db, 'ranking', selected.id);
+      await updateDoc(docRef, { nome: newName });
+    } catch (error) {
+      console.error("Erro ao atualizar registro no Firestore:", error);
+      Alert.alert("Erro", "Não foi possível atualizar o nome. Verifique sua conexão ou permissões.");
+    }
+  };
+
+  const deletarRegistro = async () => {
+    if (!jogadorSelecionado) return;
+    Keyboard.dismiss();
+    const selected = jogadorSelecionado;
+
+    setModalAcaoVisivel(false);
+    setJogadorSelecionado(null);
+
+    try {
+      const docRef = doc(db, 'ranking', selected.id);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error("Erro ao deletar registro no Firestore:", error);
+      Alert.alert("Erro", "Não foi possível excluir o recorde. Verifique sua conexão ou permissões.");
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
@@ -80,26 +118,39 @@ export default function TelaRanking() {
           <Text style={styles.textoHeaderTabelaColPontos}>PONTOS</Text>
         </View>
 
+        <Text style={styles.textoInstrucao}>
+          Toque e segure em um registro para editar ou excluir
+        </Text>
+
         <FlatList
           data={jogadoresFiltrados}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item }) => (
-            <View style={styles.itemLista}>
-              <View style={styles.colRank}>
-                <Text style={[styles.textoItem, { color: getRankColor(item.rank) }]}>
-                  {item.rank === 1 ? '1°' : item.rank === 2 ? '2°' : item.rank === 3 ? '3°' : `${item.rank}°`}
-                </Text>
+            <TouchableOpacity
+              onLongPress={() => {
+                setJogadorSelecionado(item);
+                setNovoNomeEditado(item.nome);
+                setModalAcaoVisivel(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.itemLista}>
+                <View style={styles.colRank}>
+                  <Text style={[styles.textoItem, { color: getRankColor(item.rank) }]}>
+                    {item.rank === 1 ? '1°' : item.rank === 2 ? '2°' : item.rank === 3 ? '3°' : `${item.rank}°`}
+                  </Text>
+                </View>
+                <View style={styles.colNome}>
+                  <Text style={styles.textoItemNome}>{item.nome.toUpperCase()}</Text>
+                </View>
+                <View style={styles.colPontos}>
+                  <Text style={styles.textoItemPontos}>
+                    {String(item.pontos).padStart(6, '0')}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.colNome}>
-                <Text style={styles.textoItemNome}>{item.nome.toUpperCase()}</Text>
-              </View>
-              <View style={styles.colPontos}>
-                <Text style={styles.textoItemPontos}>
-                  {String(item.pontos).padStart(6, '0')}
-                </Text>
-              </View>
-            </View>
+            </TouchableOpacity>
           )}
           ListEmptyComponent={
             <Text style={styles.textoVazio}>NENHUM JOGADOR ENCONTRADO</Text>
@@ -107,6 +158,58 @@ export default function TelaRanking() {
         />
 
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalAcaoVisivel}
+        onRequestClose={() => {
+          Keyboard.dismiss();
+          setModalAcaoVisivel(false);
+          setJogadorSelecionado(null);
+        }}
+      >
+        <View style={styles.containerModal}>
+          <View style={styles.cardModal}>
+            <Text style={styles.tituloModal}>EDITAR RECORDE</Text>
+
+            {jogadorSelecionado && (
+              <Text style={styles.textoSubtituloModal}>
+                PONTOS: {String(jogadorSelecionado.pontos).padStart(6, '0')}
+              </Text>
+            )}
+
+            <TextInput
+              style={styles.inputModal}
+              value={novoNomeEditado}
+              onChangeText={setNovoNomeEditado}
+              maxLength={15}
+              placeholder="NOME DO JOGADOR"
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
+              autoCapitalize="characters"
+            />
+
+            <TouchableOpacity style={styles.botaoAtualizar} onPress={atualizarRegistro}>
+              <Text style={styles.textoBotaoAtualizar}>ATUALIZAR NOME</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.botaoExcluir} onPress={deletarRegistro}>
+              <Text style={styles.textoBotaoExcluir}>EXCLUIR RECORDE</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.botaoCancelar}
+              onPress={() => {
+                Keyboard.dismiss();
+                setModalAcaoVisivel(false);
+                setJogadorSelecionado(null);
+              }}
+            >
+              <Text style={styles.textoBotaoCancelar}>CONCLUÍDO</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </LinearGradient>
   );
@@ -236,5 +339,123 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center',
     marginTop: 30,
+  },
+  textoInstrucao: {
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 6,
+    textAlign: 'center',
+    marginVertical: 10,
+    lineHeight: 10,
+  },
+  containerModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardModal: {
+    width: '85%',
+    backgroundColor: '#1E0B36',
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#00E5FF',
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  tituloModal: {
+    color: '#FFFF00',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  textoSubtituloModal: {
+    color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputModal: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#6E44FF',
+    color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  botaoAtualizar: {
+    width: '100%',
+    backgroundColor: '#00E5FF',
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoAtualizar: {
+    color: '#090D16',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  botaoExcluir: {
+    width: '100%',
+    backgroundColor: '#FF007F',
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#FF007F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoExcluir: {
+    color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  botaoCancelar: {
+    width: '100%',
+    backgroundColor: 'rgba(9, 6, 20, 0.65)',
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#6E44FF',
+    alignItems: 'center',
+    shadowColor: '#6E44FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoCancelar: {
+    color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
   }
 });
