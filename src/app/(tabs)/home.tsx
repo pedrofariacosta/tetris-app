@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Animated, Easing, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +8,106 @@ export default function TelaHome() {
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
+
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const numPieces = 6;
+  const pieces = useRef(
+    Array.from({ length: numPieces }).map((_, i) => ({
+      id: i,
+      imageIndex: i % 3,
+      translateX: new Animated.Value(-500),
+      translateY: new Animated.Value(-500),
+      rotate: new Animated.Value(0),
+    }))
+  ).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.08,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    const { width, height } = Dimensions.get('window');
+
+    const animatePiece = (piece: any) => {
+      const dir = Math.floor(Math.random() * 4);
+      let startX = 0, startY = 0, endX = 0, endY = 0;
+      const offscreen = 150;
+
+      if (dir === 0) {
+        startX = Math.random() * width;
+        startY = -offscreen;
+        endY = height + offscreen;
+        const sinal = Math.random() > 0.5 ? 1 : -1;
+        endX = startX + sinal * (width * 0.4 + Math.random() * (width * 0.6));
+      } else if (dir === 1) {
+        startX = Math.random() * width;
+        startY = height + offscreen;
+        endY = -offscreen;
+        const sinal = Math.random() > 0.5 ? 1 : -1;
+        endX = startX + sinal * (width * 0.4 + Math.random() * (width * 0.6));
+      } else if (dir === 2) {
+        startX = -offscreen;
+        startY = Math.random() * height;
+        endX = width + offscreen;
+        const sinal = Math.random() > 0.5 ? 1 : -1;
+        endY = startY + sinal * (height * 0.3 + Math.random() * (height * 0.5));
+      } else {
+        startX = width + offscreen;
+        startY = Math.random() * height;
+        endX = -offscreen;
+        const sinal = Math.random() > 0.5 ? 1 : -1;
+        endY = startY + sinal * (height * 0.3 + Math.random() * (height * 0.5));
+      }
+
+      piece.translateX.setValue(startX);
+      piece.translateY.setValue(startY);
+      piece.rotate.setValue(0);
+
+      const duration = 12000 + Math.random() * 10000;
+
+      Animated.parallel([
+        Animated.timing(piece.translateX, {
+          toValue: endX,
+          duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(piece.translateY, {
+          toValue: endY,
+          duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(piece.rotate, {
+          toValue: 1,
+          duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ]).start(({ finished }) => {
+        if (finished) {
+          setTimeout(() => animatePiece(piece), 2000 + Math.random() * 2000);
+        }
+      });
+    };
+
+    pieces.forEach((p, index) => {
+      setTimeout(() => animatePiece(p), index * 3000);
+    });
+
+  }, [scale, pieces]);
 
   function irParaJogo() {
     console.log('Indo para a tela do jogo');
@@ -43,18 +144,41 @@ export default function TelaHome() {
       style={styles.container}
     >
 
-      <Image
-        source={require('../../../assets/peca-verde.png')}
-        style={[styles.pecaFundo, styles.pecaVerde]}
-      />
-      <Image
-        source={require('../../../assets/peca-rosa.png')}
-        style={[styles.pecaFundo, styles.pecaRosa]}
-      />
-      <Image
-        source={require('../../../assets/peca-laranja.png')}
-        style={[styles.pecaFundo, styles.pecaLaranja]}
-      />
+      {pieces.map((p) => {
+        const sources = [
+          require('../../../assets/peca-verde.png'),
+          require('../../../assets/peca-rosa.png'),
+          require('../../../assets/peca-laranja.png'),
+        ];
+        const baseStyles = [styles.pecaVerde, styles.pecaRosa, styles.pecaLaranja];
+
+        const spin = p.rotate.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0deg', '360deg']
+        });
+
+        return (
+          <Animated.Image
+            key={p.id}
+            source={sources[p.imageIndex]}
+            style={[
+              styles.pecaFundo,
+              baseStyles[p.imageIndex],
+              {
+                top: 0,
+                left: 0,
+                right: undefined,
+                bottom: undefined,
+                transform: [
+                  { translateX: p.translateX },
+                  { translateY: p.translateY },
+                  { rotate: spin }
+                ]
+              }
+            ]}
+          />
+        );
+      })}
 
       <View style={styles.header}>
         <Text style={styles.tituloHeader}>Tetris Arcade</Text>
@@ -67,9 +191,11 @@ export default function TelaHome() {
       </View>
 
       <View style={styles.areaBotoes}>
-        <TouchableOpacity style={styles.botaoJogar} onPress={irParaJogo}>
-          <Text style={styles.textoBotaoJogar}>JOGAR!</Text>
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <TouchableOpacity style={styles.botaoJogar} onPress={irParaJogo}>
+            <Text style={styles.textoBotaoJogar}>JOGAR!</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         <TouchableOpacity style={styles.botaoSecundario} onPress={irParaRanking}>
           <Text style={styles.textoBotaoSecundario}>Ranking</Text>
