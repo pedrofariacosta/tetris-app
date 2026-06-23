@@ -20,6 +20,7 @@ export default function TelaHome() {
 
   function abrirConfiguracoes() {
     console.log('Abrir configurações');
+    router.push('/configuracoes' as any);
   }
 
   function abrirSobre() {

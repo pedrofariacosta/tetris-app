@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, PanResponder, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, PanResponder, TextInput, Alert, Vibration } from 'react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
@@ -98,6 +99,22 @@ export default function TelaJogo() {
   const [pecaAtual, setPecaAtual] = useState(() => obterNovaPeca());
   const [proximaPeca, setProximaPeca] = useState(() => obterNovaPeca());
 
+  const [vibracaoAtiva, setVibracaoAtiva] = useState(true);
+
+  useEffect(() => {
+    async function carregarVibracao() {
+      try {
+        const valorSalvo = await AsyncStorage.getItem('@vibration_active');
+        if (valorSalvo !== null) {
+          setVibracaoAtiva(valorSalvo === 'true');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar a preferência de vibração no jogo:', error);
+      }
+    }
+    carregarVibracao();
+  }, []);
+
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
@@ -107,6 +124,7 @@ export default function TelaJogo() {
   const pecaAtualRef = useRef(pecaAtual);
   const proximaPecaRef = useRef(proximaPeca);
   const tabuleiroRef = useRef(tabuleiro);
+  const vibracaoAtivaRef = useRef(vibracaoAtiva);
 
   useEffect(() => {
     pecaAtualRef.current = pecaAtual;
@@ -119,6 +137,10 @@ export default function TelaJogo() {
   useEffect(() => {
     tabuleiroRef.current = tabuleiro;
   }, [tabuleiro]);
+
+  useEffect(() => {
+    vibracaoAtivaRef.current = vibracaoAtiva;
+  }, [vibracaoAtiva]);
 
   function pausarJogo() {
     setModalVisivel(true);
@@ -147,7 +169,7 @@ export default function TelaJogo() {
     console.log('salvarPontuacao: Iniciando salvamento...');
     const nome = nomeJogador.trim() === '' ? 'Anônimo' : nomeJogador.trim();
     console.log('salvarPontuacao: Salvando dados:', { nome, pontos: pontuacao });
-    
+
     try {
       console.log('salvarPontuacao: Chamando addDoc...');
       addDoc(collection(db, 'ranking'), {
@@ -160,7 +182,7 @@ export default function TelaJogo() {
       .catch((err) => {
         console.error('salvarPontuacao: Erro assíncrono ao salvar no Firestore:', err);
       });
-      
+
       console.log('salvarPontuacao: Limpando estados e redirecionando...');
       setModalGameOverVisivel(false);
       reiniciarJogo();
@@ -219,6 +241,10 @@ export default function TelaJogo() {
     const pecaQueVaiEntrar = proximaPecaRef.current;
     const novaProximaPeca = obterNovaPeca();
     setProximaPeca(novaProximaPeca);
+
+    if (vibracaoAtivaRef.current) {
+      Vibration.vibrate(50);
+    }
 
     if (verificarColisao(pecaQueVaiEntrar, gradeFiltrada)) {
       setModalGameOverVisivel(true);
@@ -516,7 +542,7 @@ export default function TelaJogo() {
         <View style={styles.containerModal}>
           <View style={styles.cardModal}>
             <Text style={styles.tituloModal}>FIM DE JOGO</Text>
-            
+
             <Text style={styles.pontuacaoFinalText}>PONTOS: {pontuacao}</Text>
 
             <TextInput
