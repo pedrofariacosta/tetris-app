@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, FlatList, TouchableOpacity, Modal, Keyboard, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, FlatList, TouchableOpacity, Modal, Keyboard, Alert, Share } from 'react-native';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
 import { db } from '../../firebaseConfig';
@@ -53,6 +53,26 @@ export default function TelaRanking() {
     } catch (error) {
       console.error("Erro ao deletar registro no Firestore:", error);
       Alert.alert("Erro", "Não foi possível excluir o recorde. Verifique sua conexão ou permissões.");
+    }
+  };
+
+  const compartilharRecorde = async () => {
+    if (!jogadorSelecionado) return;
+    const pontos = jogadorSelecionado.pontos;
+    
+    try {
+      await Share.share({
+        message: `Fiz ${pontos} pontos no Tetris Arcade! Tente bater meu recorde!`
+      });
+    } catch (error) {
+      console.error("Erro ao compartilhar recorde:", error);
+      Alert.alert(
+        "Compartilhar Recorde",
+        `Fiz ${pontos} pontos no Tetris Arcade! Tente bater meu recorde!`
+      );
+    } finally {
+      setModalAcaoVisivel(false);
+      setJogadorSelecionado(null);
     }
   };
 
@@ -195,6 +215,13 @@ export default function TelaRanking() {
 
             <TouchableOpacity style={styles.botaoExcluir} onPress={deletarRegistro}>
               <Text style={styles.textoBotaoExcluir}>EXCLUIR RECORDE</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.botaoCompartilhar}
+              onPress={compartilharRecorde}
+            >
+              <Text style={styles.textoBotaoCompartilhar}>COMPARTILHAR RECORDE</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -435,6 +462,27 @@ const styles = StyleSheet.create({
   },
   textoBotaoExcluir: {
     color: '#FFFFFF',
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  botaoCompartilhar: {
+    width: '100%',
+    backgroundColor: '#FFFF00',
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#FFFF00',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  textoBotaoCompartilhar: {
+    color: '#090D16',
     fontFamily: 'PressStart2P_400Regular',
     fontSize: 9,
     fontWeight: 'bold',
