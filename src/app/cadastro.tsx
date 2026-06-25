@@ -4,8 +4,13 @@ import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-star
 import { router } from 'expo-router';
 import { auth } from '../firebaseConfig';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const AVATARES = ['bee', 'chick', 'crab', 'dog', 'frog', 'koala'];
 
 export default function TelaCadastro() {
+  const [nome, setNome] = useState('');
+  const [avatarSelecionado, setAvatarSelecionado] = useState('dog');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -15,7 +20,24 @@ export default function TelaCadastro() {
     PressStart2P_400Regular,
   });
 
+  const getAvatarSource = (avatarName: string) => {
+    switch (avatarName) {
+      case 'bee': return require('../../assets/bee.png');
+      case 'chick': return require('../../assets/chick.png');
+      case 'crab': return require('../../assets/crab.png');
+      case 'frog': return require('../../assets/frog.png');
+      case 'koala': return require('../../assets/koala.png');
+      case 'dog':
+      default: return require('../../assets/dog.png');
+    }
+  };
+
   async function realizarCadastro() {
+    if (!nome.trim()) {
+      Alert.alert('Erro', 'Por favor, preencha o seu nome.');
+      return;
+    }
+
     if (!email || !senha || !confirmarSenha) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
@@ -33,6 +55,9 @@ export default function TelaCadastro() {
 
     setLoading(true);
     try {
+      await AsyncStorage.setItem('@nome_usuario', nome.trim());
+      await AsyncStorage.setItem('@avatar_usuario', avatarSelecionado);
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
@@ -69,12 +94,38 @@ export default function TelaCadastro() {
 
       <Text style={styles.titulo}>Criar Conta</Text>
 
-      <View style={styles.avatarPlaceholder}>
+      <Text style={styles.subtitulo}>Escolha seu Avatar</Text>
+      <View style={styles.avatarList}>
+        {AVATARES.map((avatar) => (
+          <TouchableOpacity 
+            key={avatar} 
+            onPress={() => setAvatarSelecionado(avatar)}
+            style={[
+              styles.avatarContainer,
+              avatarSelecionado === avatar && styles.avatarSelecionado
+            ]}
+          >
+            <Image 
+              source={getAvatarSource(avatar)} 
+              style={styles.avatarImage} 
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.inputContainer}>
         <Image
           source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-          style={styles.avatarIcon}
+          style={styles.inputIcon}
         />
-        <Text style={styles.textoAvatar}>Escolher Avatar (Em breve)</Text>
+        <TextInput
+          style={styles.inputField}
+          placeholder="Seu Nome"
+          placeholderTextColor="#FFFFFF"
+          value={nome}
+          onChangeText={setNome}
+          autoCapitalize="words"
+        />
       </View>
 
       <View style={styles.inputContainer}>
@@ -157,30 +208,39 @@ const styles = StyleSheet.create({
   titulo: {
     fontFamily: 'PressStart2P_400Regular',
     fontSize: 20,
-    marginBottom: 30,
+    marginBottom: 20,
     color: '#FFFFFF',
     textAlign: 'center',
   },
-  avatarPlaceholder: {
-    alignItems: 'center',
-    marginBottom: 30,
-    padding: 15,
-    borderWidth: 2,
-    borderColor: '#8B56FC',
-    borderRadius: 15,
-    backgroundColor: 'rgba(139, 86, 252, 0.1)',
-    width: '80%',
+  subtitulo: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 10,
+    marginBottom: 15,
+    color: '#00E5FF',
+    textAlign: 'center',
   },
-  avatarIcon: {
+  avatarList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 20,
+    width: '100%',
+  },
+  avatarContainer: {
+    margin: 5,
+    padding: 5,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  avatarSelecionado: {
+    borderColor: '#00E5FF',
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+  },
+  avatarImage: {
     width: 60,
     height: 60,
-    marginBottom: 10,
-    tintColor: '#8B56FC',
-  },
-  textoAvatar: {
-    fontFamily: 'PressStart2P_400Regular',
-    fontSize: 8,
-    color: '#8B56FC',
+    resizeMode: 'contain',
   },
   inputContainer: {
     flexDirection: 'row',

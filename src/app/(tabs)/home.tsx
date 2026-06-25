@@ -1,13 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Animated, Easing, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TelaHome() {
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
+
+  const [nomeUsuario, setNomeUsuario] = useState('Jogador');
+  const [avatarUsuario, setAvatarUsuario] = useState('dog');
 
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -21,6 +25,20 @@ export default function TelaHome() {
       rotate: new Animated.Value(0),
     }))
   ).current;
+
+  useEffect(() => {
+    async function carregarDadosUsuario() {
+      try {
+        const nomeSalvo = await AsyncStorage.getItem('@nome_usuario');
+        const avatarSalvo = await AsyncStorage.getItem('@avatar_usuario');
+        if (nomeSalvo) setNomeUsuario(nomeSalvo);
+        if (avatarSalvo) setAvatarUsuario(avatarSalvo);
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      }
+    }
+    carregarDadosUsuario();
+  }, []);
 
   useEffect(() => {
     Animated.loop(
@@ -129,6 +147,18 @@ export default function TelaHome() {
     router.push('/(tabs)/sobre');
   }
 
+  const getAvatarSource = (avatarName: string) => {
+    switch (avatarName) {
+      case 'bee': return require('../../../assets/bee.png');
+      case 'chick': return require('../../../assets/chick.png');
+      case 'crab': return require('../../../assets/crab.png');
+      case 'frog': return require('../../../assets/frog.png');
+      case 'koala': return require('../../../assets/koala.png');
+      case 'dog':
+      default: return require('../../../assets/dog.png');
+    }
+  };
+
   if (!fontsLoaded) {
     return (
       <LinearGradient
@@ -182,11 +212,14 @@ export default function TelaHome() {
 
       <View style={styles.header}>
         <Text style={styles.tituloHeader}>Tetris Arcade</Text>
-        <View style={styles.perfilPlaceholder} />
+        <Image 
+          source={getAvatarSource(avatarUsuario)} 
+          style={styles.perfilPlaceholder} 
+        />
       </View>
 
       <View style={styles.cardBoasVindas}>
-        <Text style={styles.textoBoasVindas}>OLÁ, [NOME]!</Text>
+        <Text style={styles.textoBoasVindas}>OLÁ, {nomeUsuario.toUpperCase()}!</Text>
         <Text style={styles.textoBoasVindasSub}>PRONTO PARA BATER SEU RECORDE?</Text>
       </View>
 
@@ -272,10 +305,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     top: 50,
-    shadowColor: '#00E5FF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
   },
 
   cardBoasVindas: {
