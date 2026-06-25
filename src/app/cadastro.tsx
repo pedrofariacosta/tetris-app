@@ -3,46 +3,56 @@ import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, Acti
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { router } from 'expo-router';
 import { auth } from '../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
-export default function TelaLogin() {
+export default function TelaCadastro() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [loading, setLoading] = useState(false);
 
   const [fontsLoaded] = useFonts({
     PressStart2P_400Regular,
   });
 
-  async function entrarNoJogo() {
-    if (!email || !senha) {
-      Alert.alert('Erro', 'Por favor, preencha email e senha.');
+  async function realizarCadastro() {
+    if (!email || !senha || !confirmarSenha) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      Alert.alert('Erro', 'As senhas não coincidem.');
+      return;
+    }
+
+    if (senha.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      if (!user.emailVerified) {
-        Alert.alert(
-          'Email não verificado',
-          'Por favor, verifique seu email antes de acessar o jogo. Se não encontrar, verifique a caixa de spam.'
-        );
-        auth.signOut();
-        setLoading(false);
-        return;
-      }
+      await sendEmailVerification(user);
 
-      router.replace('/(tabs)/home');
+      Alert.alert(
+        'Cadastro Realizado!',
+        'Enviamos um link de verificação para o seu email. Por favor, verifique sua caixa de entrada (ou spam) antes de fazer o login.',
+        [{ text: 'OK', onPress: () => router.replace('/') }]
+      );
+
     } catch (error: any) {
-      console.error('Erro ao logar:', error);
-      let mensagem = 'Erro ao fazer login.';
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        mensagem = 'Email ou senha incorretos.';
+      console.error('Erro ao cadastrar:', error);
+      let mensagem = 'Erro ao fazer o cadastro.';
+      if (error.code === 'auth/email-already-in-use') {
+        mensagem = 'Este email já está sendo usado.';
       } else if (error.code === 'auth/invalid-email') {
         mensagem = 'O email fornecido é inválido.';
+      } else if (error.code === 'auth/weak-password') {
+        mensagem = 'A senha é muito fraca.';
       }
       Alert.alert('Erro', mensagem);
     } finally {
@@ -57,12 +67,15 @@ export default function TelaLogin() {
   return (
     <View style={styles.container}>
 
-      <Image
-        source={require('../../assets/game-console.png')}
-        style={styles.logo}
-      />
+      <Text style={styles.titulo}>Criar Conta</Text>
 
-      <Text style={styles.titulo}>Tetris Arcade</Text>
+      <View style={styles.avatarPlaceholder}>
+        <Image
+          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
+          style={styles.avatarIcon}
+        />
+        <Text style={styles.textoAvatar}>Escolher Avatar (Em breve)</Text>
+      </View>
 
       <View style={styles.inputContainer}>
         <Image
@@ -95,22 +108,37 @@ export default function TelaLogin() {
         />
       </View>
 
+      <View style={styles.inputContainer}>
+        <Image
+          source={require('../../assets/padlock.png')}
+          style={styles.inputIcon}
+        />
+        <TextInput
+          style={styles.inputField}
+          placeholder="Confirmar Senha"
+          placeholderTextColor="#FFFFFF"
+          value={confirmarSenha}
+          onChangeText={setConfirmarSenha}
+          secureTextEntry={true}
+        />
+      </View>
+
       <TouchableOpacity
         style={[styles.botao, loading && { opacity: 0.7 }]}
-        onPress={entrarNoJogo}
+        onPress={realizarCadastro}
         disabled={loading}
       >
         {loading ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={styles.textoBotao}>Entrar</Text>
+          <Text style={styles.textoBotao}>Cadastrar</Text>
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={{ marginTop: 20 }} onPress={() => router.push('/cadastro')}>
-        <Text style={styles.textoCadastroContainer}>
-          <Text style={styles.textoCadastroComum}>Não tem uma conta? </Text>
-          <Text style={styles.textoCadastroDestaque}>Cadastre-se</Text>
+      <TouchableOpacity style={{ marginTop: 20 }} onPress={() => router.back()}>
+        <Text style={styles.textoVoltarContainer}>
+          <Text style={styles.textoVoltarComum}>Já tem uma conta? </Text>
+          <Text style={styles.textoVoltarDestaque}>Faça Login</Text>
         </Text>
       </TouchableOpacity>
 
@@ -126,16 +154,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  logo: {
-    width: 170,
-    height: 170,
-    marginBottom: 10,
-  },
   titulo: {
     fontFamily: 'PressStart2P_400Regular',
-    fontSize: 22,
-    marginBottom: 40,
+    fontSize: 20,
+    marginBottom: 30,
     color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  avatarPlaceholder: {
+    alignItems: 'center',
+    marginBottom: 30,
+    padding: 15,
+    borderWidth: 2,
+    borderColor: '#8B56FC',
+    borderRadius: 15,
+    backgroundColor: 'rgba(139, 86, 252, 0.1)',
+    width: '80%',
+  },
+  avatarIcon: {
+    width: 60,
+    height: 60,
+    marginBottom: 10,
+    tintColor: '#8B56FC',
+  },
+  textoAvatar: {
+    fontFamily: 'PressStart2P_400Regular',
+    fontSize: 8,
+    color: '#8B56FC',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -162,7 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   botao: {
-    width: '30%',
+    width: '50%',
     height: 50,
     backgroundColor: '#8B56FC',
     borderRadius: 8,
@@ -172,16 +217,16 @@ const styles = StyleSheet.create({
   },
   textoBotao: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
   },
-  textoCadastroContainer: {
+  textoVoltarContainer: {
     fontSize: 14,
   },
-  textoCadastroComum: {
+  textoVoltarComum: {
     color: '#FFFFFF',
   },
-  textoCadastroDestaque: {
+  textoVoltarDestaque: {
     color: '#8B56FC',
   }
 });
