@@ -55,9 +55,11 @@ export default function TelaCadastro() {
 
     setLoading(true);
     try {
+      // salva as configs do usuario localmente
       await AsyncStorage.setItem('@nome_usuario', nome.trim());
       await AsyncStorage.setItem('@avatar_usuario', avatarSelecionado);
 
+      // cria a credencial no firebase e dispara o email de verificacao
       const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 

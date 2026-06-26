@@ -22,6 +22,7 @@ export default function TelaRanking() {
   const [novoNomeEditado, setNovoNomeEditado] = useState('');
 
   const atualizarRegistro = async () => {
+    // atualiza o nickname do jogador no firestore
     if (!jogadorSelecionado || !novoNomeEditado.trim()) return;
     Keyboard.dismiss();
     const selected = jogadorSelecionado;
@@ -40,6 +41,7 @@ export default function TelaRanking() {
   };
 
   const deletarRegistro = async () => {
+    // deleta o recorde salvo no firestore
     if (!jogadorSelecionado) return;
     Keyboard.dismiss();
     const selected = jogadorSelecionado;
@@ -81,6 +83,7 @@ export default function TelaRanking() {
   });
 
   useEffect(() => {
+    // escuta o banco em tempo real pra ordenar o ranking por pontuacao
     const q = query(collection(db, 'ranking'), orderBy('pontuacao', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const listaJogadores = snapshot.docs.map((doc, index) => ({

@@ -22,9 +22,11 @@ export default function TelaLogin() {
 
     setLoading(true);
     try {
+      // faz a requisição na API do firebase pra logar o usuario
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
+      // se nao verificou o email ainda, desloga e barra o acesso
       if (!user.emailVerified) {
         Alert.alert(
           'Email não verificado',
@@ -35,7 +37,7 @@ export default function TelaLogin() {
         return;
       }
 
-      router.replace('/(tabs)/home');
+      router.replace('/(tabs)/home'); 
     } catch (error: any) {
       console.error('Erro ao logar:', error);
       let mensagem = 'Erro ao fazer login.';

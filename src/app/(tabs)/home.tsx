@@ -29,6 +29,7 @@ export default function TelaHome() {
   useEffect(() => {
     async function carregarDadosUsuario() {
       try {
+        // recupera o nickname e o avatar salvos no cache local
         const nomeSalvo = await AsyncStorage.getItem('@nome_usuario');
         const avatarSalvo = await AsyncStorage.getItem('@avatar_usuario');
         if (nomeSalvo) setNomeUsuario(nomeSalvo);
@@ -59,6 +60,7 @@ export default function TelaHome() {
     const { width, height } = Dimensions.get('window');
 
     const animatePiece = (piece: any) => {
+      // calcula posicoes e direcoes random pras pecas flutuando no fundo
       const dir = Math.floor(Math.random() * 4);
       let startX = 0, startY = 0, endX = 0, endY = 0;
       const offscreen = 150;

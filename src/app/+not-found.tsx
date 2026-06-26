@@ -9,6 +9,7 @@ export default function NotFoundScreen() {
   });
 
   function voltarInicio() {
+    // joga o usuario de volta pra home do app
     router.replace('/(tabs)/home');
   }
 

@@ -18,6 +18,7 @@ export default function TelaConfiguracoes() {
   useEffect(() => {
     async function carregarConfiguracao() {
       try {
+        // pega a config de vibracao salva no device
         const valorSalvo = await AsyncStorage.getItem(STORAGE_KEY);
         if (valorSalvo !== null) {
           setVibracaoAtiva(valorSalvo === 'true');
@@ -36,6 +37,7 @@ export default function TelaConfiguracoes() {
   async function alterarVibracao(novoValor: boolean) {
     setVibracaoAtiva(novoValor);
     try {
+      // salva o novo estado da vibracao no storage local
       await AsyncStorage.setItem(STORAGE_KEY, String(novoValor));
     } catch (error) {
       console.error('Erro ao salvar a configuração de vibração:', error);

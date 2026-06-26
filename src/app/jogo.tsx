@@ -68,6 +68,7 @@ function obterNovaPeca() {
 }
 
 function verificarColisao(novasCoordenadas: { formato: number[][]; linha: number; coluna: number; }, grade: any[][]) {
+  // varre a grade pra ver se a peca bate nas bordas ou em outros blocos
   const { formato, linha, coluna } = novasCoordenadas;
   for (let r = 0; r < formato.length; r++) {
     for (let c = 0; c < formato[r].length; c++) {
@@ -166,6 +167,7 @@ export default function TelaJogo() {
   }
 
   function salvarPontuacao() {
+    // grava a pontuacao final do usuario no firestore
     console.log('salvarPontuacao: Iniciando salvamento...');
     const nome = nomeJogador.trim() === '' ? 'Anônimo' : nomeJogador.trim();
     console.log('salvarPontuacao: Salvando dados:', { nome, pontos: pontuacao });
@@ -200,6 +202,7 @@ export default function TelaJogo() {
   }
 
   function fixarPeca() {
+    // trava a peca no grid e calcula se limpou linha pra somar os pontos
     const gradeAtual = tabuleiroRef.current;
     const peca = pecaAtualRef.current;
     const novaGrade = gradeAtual.map(linha => [...linha]);
@@ -301,6 +304,7 @@ export default function TelaJogo() {
   }
 
   function girarPeca() {
+    // faz a rotacao da matriz da peca e testa os offsets pras bordas
     const peca = pecaAtualRef.current;
     const grade = tabuleiroRef.current;
     if (!peca || modalVisivel) return;
@@ -358,6 +362,7 @@ export default function TelaJogo() {
 
   const panResponder = useRef(
     PanResponder.create({
+      // trata os gestos de swipe no tabuleiro pra mover os blocos
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
