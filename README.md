@@ -1,56 +1,74 @@
-# Welcome to your Expo app 👋
+# 🎮 Tetris Arcade
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile inspirado no clássico Tetris, desenvolvido durante a graduação em Ciência da Computação utilizando React Native, Expo e TypeScript.
 
-## Get started
+## 📱 Sobre o projeto
 
-1. Install dependencies
+O Tetris Arcade foi desenvolvido como um projeto acadêmico durante a graduação em Ciência da Computação, com o objetivo de aplicar conceitos de desenvolvimento de aplicações mobile.
 
-   ```bash
-   npm install
-   ```
+O aplicativo possui diferentes telas e recursos, incluindo cadastro de usuários, partidas de Tetris, configurações e ranking de pontuações.
 
-2. Start the app
+<img width="739" height="1600" alt="Tela Principal" src="https://github.com/user-attachments/assets/dda8265a-8206-411b-9ef6-8b0753fe57bc" />
 
-   ```bash
-   npx expo start
-   ```
+<img width="739" height="1600" alt="Tela de Jogo" src="https://github.com/user-attachments/assets/a2593e93-a8bc-4db1-b9e0-7b37fe58a96c" />
 
-In the output, you'll find options to open the app in a
+<img width="739" height="1600" alt="Tela de Jogo" src="https://github.com/user-attachments/assets/b399a060-5e71-4c35-94e1-e05eb449c365" />
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+<img width="739" height="1600" alt="Tela de Ranking" src="https://github.com/user-attachments/assets/12cbbf7a-7445-4c7e-a3f6-fb541beace76" />
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🛠️ Tecnologias
 
-## Get a fresh project
+- React Native
+- Expo
+- Expo Router
+- TypeScript
+- Firebase
 
-When you're ready, run:
+## 📂 Estrutura do projeto
 
-```bash
-npm run reset-project
-```
+O projeto está organizado utilizando componentes, hooks e navegação baseada em arquivos.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+src/
+├── app/
+│   ├── cadastro.tsx
+│   ├── configuracoes.tsx
+│   ├── explore.tsx
+│   ├── index.tsx
+│   └── jogo.tsx
+├── components/
+├── constants/
+└── hooks/
 
-### Other setup steps
+## 🚀 Como executar
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### Pré-requisitos
 
-## Learn more
+- Node.js
+- npm
+- Expo Go ou um emulador Android/iOS
 
-To learn more about developing your project with Expo, look at the following resources:
+### Instalação
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Clone o repositório:
+git clone https://github.com/pedrofariacosta/tetris-app.git
 
-## Join the community
+Entre na pasta:
+cd tetris-app
 
-Join our community of developers creating universal apps.
+Instale as dependências:
+npm install
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Inicie o projeto:
+npx expo start
+
+Depois, abra o aplicativo utilizando o Expo Go ou um emulador Android/iOS.
+
+📚 Projeto acadêmico
+
+Projeto desenvolvido durante a graduação em Ciência da Computação no IFSULDEMINAS.
+
+👨‍💻 Autor
+Pedro Arthur Faria Costa
+
+### 📫 Contato
+[LinkedIn](https://www.linkedin.com/in/pedro-arthur-faria-costa-206059270/) • [Email](mailto:pedrofaria356@gmail.com)
