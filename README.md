@@ -25,6 +25,7 @@ O aplicativo possui diferentes telas e recursos, incluindo cadastro de usuários
 
 O projeto está organizado utilizando componentes, hooks e navegação baseada em arquivos.
 
+```text
 src/
 ├── app/
 │   ├── cadastro.tsx
@@ -35,6 +36,7 @@ src/
 ├── components/
 ├── constants/
 └── hooks/
+```
 
 ## 🚀 Como executar
 
@@ -44,18 +46,18 @@ src/
 - npm
 - Expo Go ou um emulador Android/iOS
 
-### Instalação
+### Instalação e execução
 
-Clone o repositório:
+1. Clone o repositório:
 git clone https://github.com/pedrofariacosta/tetris-app.git
 
-Entre na pasta:
+2. Entre na pasta:
 cd tetris-app
 
-Instale as dependências:
+3. Instale as dependências:
 npm install
 
-Inicie o projeto:
+4. Inicie o projeto:
 npx expo start
 
 Depois, abra o aplicativo utilizando o Expo Go ou um emulador Android/iOS.
