@@ -8,13 +8,10 @@ O Tetris Arcade foi desenvolvido como um projeto acadêmico durante a graduaçã
 
 O aplicativo possui diferentes telas e recursos, incluindo cadastro de usuários, partidas de Tetris, configurações e ranking de pontuações.
 
-<img width="739" height="1600" alt="Tela Principal" src="https://github.com/user-attachments/assets/dda8265a-8206-411b-9ef6-8b0753fe57bc" />
-
-<img width="739" height="1600" alt="Tela de Jogo" src="https://github.com/user-attachments/assets/a2593e93-a8bc-4db1-b9e0-7b37fe58a96c" />
-
-<img width="739" height="1600" alt="Tela de Jogo" src="https://github.com/user-attachments/assets/b399a060-5e71-4c35-94e1-e05eb449c365" />
-
-<img width="739" height="1600" alt="Tela de Ranking" src="https://github.com/user-attachments/assets/12cbbf7a-7445-4c7e-a3f6-fb541beace76" />
+<img width="200" alt="Tela Principal" src="https://github.com/user-attachments/assets/dda8265a-8206-411b-9ef6-8b0753fe57bc" />
+<img width="200" alt="Tela de Jogo" src="https://github.com/user-attachments/assets/a2593e93-a8bc-4db1-b9e0-7b37fe58a96c" />
+<img width="200" alt="Tela de Jogo" src="https://github.com/user-attachments/assets/b399a060-5e71-4c35-94e1-e05eb449c365" />
+<img width="200" alt="Tela de Ranking" src="https://github.com/user-attachments/assets/12cbbf7a-7445-4c7e-a3f6-fb541beace76" />
 
 ## 🛠️ Tecnologias
 
